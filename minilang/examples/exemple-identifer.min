@@ -1,0 +1,9 @@
+var idade: inteiro;
+
+idade = 20;
+
+20.5;
+
+
+// erro emulado
+idade = @20;
