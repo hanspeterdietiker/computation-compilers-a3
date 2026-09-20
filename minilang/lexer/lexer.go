@@ -1,5 +1,9 @@
 package lexer
 
+import (
+	"fmt"
+)
+
 type Lexer struct {
 	source  []rune
 	start   int
@@ -45,6 +49,10 @@ func (l *Lexer) scanToken() {
 	case '/':
 		l.addToken(TokenDivide)
 
+	case '#':
+		l.addToken(TokenComment)
+		l.comment()
+
 	case '%':
 		l.addToken(TokenPercent)
 
@@ -73,7 +81,7 @@ func (l *Lexer) scanToken() {
 		l.addToken(TokenDot)
 
 	case ' ', '\r', '\t':
-		// ignora
+		// ignora espaço em branco
 
 	case '\n':
 		l.line++
@@ -103,10 +111,97 @@ func (l *Lexer) scanToken() {
 		if l.match('=') {
 			l.addToken(TokenNotEqual)
 		} else {
-			// erro léxico
+			l.reportInvalidCharacter(c)
 		}
+	default:
+		if isDigit(c) {
+			l.number()
+		} else if isLetter(c) {
+			l.identifier()
+		} else {
+			l.reportInvalidCharacter(c)
+		}
+
 	}
 
+}
+
+func (l *Lexer) number() {
+
+	for !l.isAtEnd() && isDigit(l.source[l.current]) {
+		l.advance()
+	}
+
+	if !l.isAtEnd() &&
+		l.source[l.current] == '.' &&
+		l.peekNextIsDigit() {
+
+		l.advance()
+
+		for !l.isAtEnd() && isDigit(l.source[l.current]) {
+			l.advance()
+		}
+
+		l.addToken(TokenFloatLiteral)
+		return
+	}
+
+	l.addToken(TokenIntLiteral)
+}
+
+func (l *Lexer) comment() {
+	for !l.isAtEnd() && l.source[l.current] != '\n' {
+		l.advance()
+	}
+}
+
+func (l *Lexer) reportInvalidCharacter(c rune) {
+	fmt.Printf(
+		"[ERRO LÉXICO] linha %d, coluna %d: caractere '%c' não reconhecido\n",
+		l.line,
+		l.column-1,
+		c,
+	)
+}
+
+func (l *Lexer) identifier() {
+
+	for !l.isAtEnd() && isAlphaNumeric(l.source[l.current]) {
+		l.advance()
+	}
+
+	text := string(l.source[l.start:l.current])
+
+	tokenType, exists := Keywords[text]
+
+	if !exists {
+		tokenType = TokenIdentifier
+	}
+
+	l.addToken(tokenType)
+}
+func (l *Lexer) peekNextIsDigit() bool {
+
+	if l.current+1 >= len(l.source) {
+		return false
+	}
+
+	return isDigit(l.source[l.current+1])
+}
+func isLetter(c rune) bool {
+	return (c >= 'a' && c <= 'z') ||
+		(c >= 'A' && c <= 'Z') ||
+		c == '_' ||
+		c == 'ã' ||
+		c == 'Ã'
+}
+
+func isDigit(c rune) bool {
+	return c >= '0' && c <= '9'
+}
+
+func isAlphaNumeric(c rune) bool {
+	return isLetter(c) || isDigit(c)
 }
 
 func (l *Lexer) match(expected rune) bool {
