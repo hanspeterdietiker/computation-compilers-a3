@@ -1,5 +1,10 @@
 package main
 
+// existe o package exemples
+// para testar rode 'go run ./cmd/minilang examples/exemple-identifer.min'
+// para rodar deve ter o go instalado e configurado no path do sistema operacional
+// além do mais há testes automatizados que podem ser executados com o comando 'go test'
+
 import (
 	"fmt"
 	"os"
