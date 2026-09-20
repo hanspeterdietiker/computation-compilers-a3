@@ -68,8 +68,8 @@ const (
 	TokenDot       TokenType = "DOT"       // -> .
 	TokenColon     TokenType = "COLON"     // -> :
 
-	// Comments
-	TokenComment TokenType = "COMMENT" // -> //
+	TokenComment TokenType = "COMMENT" // -> #
+
 
 	// Eof
 	TokenEOF TokenType = "EOF" // End of file
