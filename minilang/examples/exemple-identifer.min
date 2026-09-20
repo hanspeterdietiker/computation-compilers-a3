@@ -1,9 +1,9 @@
-var idade: inteiro;
+var idade: int;
 
 idade = 20;
 
 20.5;
 
+idade = @20; 
 
-// erro emulado
-idade = @20;
+# ignorar comentario 
