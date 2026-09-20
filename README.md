@@ -6,7 +6,7 @@ O projeto será desenvolvido de forma incremental através dos marcos **M1, M2, 
 
 ## 📌 Sobre o projeto
 
-A **MiniLang** é uma linguagem imperativa de propósito educacional que possui suporte a:
+A **MiniLang** é uma linguagem imperativa de propósito educacional cujo escopo prevê:
 
 * Declaração de variáveis;
 * Tipos `inteiro` e `booleano`;
@@ -85,7 +85,7 @@ Código-fonte (.min)
 
 O primeiro marco consiste na implementação do analisador léxico da MiniLang.
 
-O lexer será responsável por transformar o código-fonte em uma sequência de **tokens**.
+O lexer já transforma o código-fonte em uma sequência de **tokens**.
 
 Exemplo:
 
@@ -94,7 +94,7 @@ var idade: inteiro;
 idade = 20;
 ```
 
-Resultado conceitual:
+Resultado conceitual esperado:
 
 ```text
 VAR
@@ -122,7 +122,7 @@ SEMICOLON
 * Rastreamento de linha e coluna;
 * Detecção de caracteres inválidos;
 * Mensagens de erro léxico;
-* Documentação do AFD;
+* Documentação do AFD em [`docs/afd.md`](docs/afd.md);
 * Testes automatizados.
 
 ---
@@ -391,7 +391,11 @@ O back-end também deverá contemplar a otimização exigida pelo projeto.
 
 ---
 
-# 📁 Estrutura planejada
+# 📁 Estrutura atual e planejada
+
+Atualmente, a raiz contém este README, a licença e a documentação do AFD em [`docs/afd.md`](docs/afd.md). O módulo Go fica em `minilang/`, com `go.mod`, `cmd/minilang/main.go`, `lexer/lexer.go`, `lexer/token.go` e os exemplos `examples/exemple.min` e `examples/exemple-identifer.min`.
+
+A árvore abaixo representa a organização planejada; arquivos de testes, parser, AST, semântica e interpretador ainda não existem. Este README e o diretório `docs/` ficam na raiz do repositório.
 
 ```text
 minilang/
@@ -426,12 +430,13 @@ minilang/
 │   ├── invalido.min
 │   └── real.min
 │
-├── docs/
-│   ├── afd.md
-│   └── grammar.ebnf
-│
-├── go.mod
-└── README.md
+└── go.mod
+```
+
+```text
+docs/
+├── afd.md
+└── grammar.ebnf  # planejado para o M2
 ```
 
 A estrutura poderá sofrer alterações conforme a evolução do projeto.
@@ -440,25 +445,29 @@ A estrutura poderá sofrer alterações conforme a evolução do projeto.
 
 # 💻 Executando o projeto
 
-> Esta seção será atualizada conforme a implementação avançar.
-
-Pré-requisito:
+Pré-requisito: Go instalado e disponível no `PATH`. O `minilang/go.mod` declara a versão **1.27.1**. A partir da raiz do repositório, entre no módulo:
 
 ```bash
+cd minilang
 go version
 ```
 
-Executar o compilador:
+Executar a análise léxica dos exemplos existentes:
 
 ```bash
-go run ./cmd/minilang examples/valido.min
+go run ./cmd/minilang examples/exemple.min
+go run ./cmd/minilang examples/exemple-identifer.min
 ```
+
+O primeiro exemplo exercita operadores e delimitadores. O segundo inclui identificadores, números e um erro proposital com `@`. Comentários MiniLang começam com `#`; a sequência `//` representa dois operadores de divisão. No segundo exemplo, `inteiro` é reconhecido como identificador; a palavra reservada implementada é `int`.
+
+A saída apresenta o tipo do token, o lexema entre aspas e a posição `linha:coluna`. Por exemplo, `20.5;` gera `FLOAT_LITERAL` e `SEMICOLON`. Ao final do arquivo é emitido `EOF`. Sem um caminho de arquivo, a CLI exibe `Uso: minilang <arquivo>`.
 
 ---
 
 # 🧪 Testes
 
-Os testes automatizados serão implementados utilizando o pacote nativo de testes do Go.
+Os testes automatizados usam o pacote nativo de testes do Go. A suíte do lexer cobre literais inteiros, comentários com `#`, o significado de `//` e o erro para `!` isolado. Execute os comandos abaixo dentro de `minilang/`.
 
 Executar todos os testes:
 
@@ -484,7 +493,7 @@ A bateria de testes deverá possuir tanto programas válidos quanto inválidos.
 
 # ❌ Tratamento de erros
 
-As mensagens de erro deverão identificar:
+Caracteres inválidos, incluindo `@` e `!` isolado, geram um diagnóstico com linha e coluna, e a análise continua até `EOF`. As mensagens identificam:
 
 * Fase do compilador;
 * Linha;
@@ -523,7 +532,15 @@ não é possível atribuir REAL a uma variável INTEIRO.
 
 # 📝 Palavras reservadas
 
-A especificação mínima possui as seguintes palavras reservadas:
+O mapa `Keywords` em `minilang/lexer/token.go` reconhece atualmente as seguintes palavras, diferenciando maiúsculas de minúsculas:
+
+```text
+program var int float boolean
+if else while print read
+true false and or not end
+```
+
+O alinhamento com a especificação em português permanece pendente. As palavras previstas nessa especificação são:
 
 ```text
 programa
@@ -567,6 +584,8 @@ real
 
 ### Lógicos
 
+O lexer atual reconhece `and`, `or` e `not`. Na especificação em português:
+
 ```text
 e
 ou
@@ -591,7 +610,7 @@ Comentários começam com `#` e continuam até o final da linha.
 var idade: inteiro; # declaração de idade
 ```
 
-Os comentários serão descartados durante a análise léxica.
+Os comentários são descartados durante a análise léxica. A sequência `//` não é comentário e gera dois tokens `DIVIDE`.
 
 ---
 
@@ -599,19 +618,20 @@ Os comentários serão descartados durante a análise léxica.
 
 ### M1 — Analisador Léxico
 
-* [ ] Estrutura inicial do projeto Go
-* [ ] Definição dos tokens
-* [ ] Palavras reservadas
-* [ ] Identificadores
-* [ ] Literais inteiros
-* [ ] Literais reais
-* [ ] Operadores
-* [ ] Delimitadores
-* [ ] Comentários
-* [ ] Linha e coluna
-* [ ] Erros léxicos
-* [ ] AFD
-* [ ] Testes do lexer
+* [x] Estrutura inicial do projeto Go e CLI
+* [x] Definição dos tokens
+* [x] Palavras reservadas em inglês
+* [ ] Alinhar palavras reservadas com a especificação em português
+* [x] Identificadores
+* [x] Literais inteiros (`INT_LITERAL`)
+* [x] Literais reais
+* [x] Operadores
+* [x] Delimitadores
+* [x] Comentários com `#`
+* [x] Linha e coluna
+* [x] Erros léxicos (incluindo `!` isolado)
+* [x] AFD documentado em [`docs/afd.md`](docs/afd.md)
+* [x] Testes do lexer para os comportamentos implementados
 
 ### M2 — Parser + AST
 
@@ -655,7 +675,7 @@ Os comentários serão descartados durante a análise léxica.
 
 # 🎯 Objetivo final
 
-Ao final do projeto, esperamos executar:
+Ao final do projeto, esperamos executar, dentro de `minilang/`, um programa completo como o futuro `examples/programa.min`:
 
 ```bash
 go run ./cmd/minilang examples/programa.min
