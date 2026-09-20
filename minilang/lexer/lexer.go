@@ -71,7 +71,57 @@ func (l *Lexer) scanToken() {
 
 	case '.':
 		l.addToken(TokenDot)
+
+	case ' ', '\r', '\t':
+		// ignora
+
+	case '\n':
+		l.line++
+		l.column = 1
+
+	case '=':
+		if l.match('=') {
+			l.addToken(TokenEqual)
+		} else {
+			l.addToken(TokenAssign)
+		}
+	case '<':
+		if l.match('=') {
+			l.addToken(TokenLessEqual)
+		} else {
+			l.addToken(TokenLessThan)
+		}
+
+	case '>':
+		if l.match('=') {
+			l.addToken(TokenGreaterEqual)
+		} else {
+			l.addToken(TokenGreaterThan)
+		}
+
+	case '!':
+		if l.match('=') {
+			l.addToken(TokenNotEqual)
+		} else {
+			// erro léxico
+		}
 	}
+
+}
+
+func (l *Lexer) match(expected rune) bool {
+	if l.isAtEnd() {
+		return false
+	}
+
+	if l.source[l.current] != expected {
+		return false
+	}
+
+	l.current++
+	l.column++
+
+	return true
 }
 
 func (l *Lexer) addToken(tokenType TokenType) {
