@@ -1,0 +1,6 @@
+program calculadora {
+    var valor: real;
+    valor = 10 + 2.5 * 3;
+    if (valor >= 15) print(valor);
+    else print(0);
+}

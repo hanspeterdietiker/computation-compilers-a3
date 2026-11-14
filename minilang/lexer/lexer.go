@@ -50,7 +50,6 @@ func (l *Lexer) scanToken() {
 		l.addToken(TokenDivide)
 
 	case '#':
-		l.addToken(TokenComment)
 		l.comment()
 
 	case '%':

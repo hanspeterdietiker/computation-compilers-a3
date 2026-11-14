@@ -1,0 +1,4 @@
+var a int;
+print(1);
+var b: int;
+print(2;

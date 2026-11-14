@@ -131,7 +131,7 @@ SEMICOLON
 
 O segundo marco adicionará o **parser**.
 
-O parser receberá os tokens produzidos pelo lexer e verificará se eles seguem a gramática definida para a MiniLang.
+O parser receberá os tokens produzidos pelo lexer e verificará se eles seguem a gramática livre de contexto definida para a MiniLang. A gramática EBNF e a descrição do autômato de pilha correspondente estão em [`docs/grammar.ebnf`](docs/grammar.ebnf) e [`docs/pda.md`](docs/pda.md).
 
 ```text
 Código
@@ -167,7 +167,9 @@ Assignment
 
 O parser deverá respeitar corretamente precedência e associatividade dos operadores.
 
-Também serão implementadas estratégias de recuperação de erros sintáticos para permitir a identificação de múltiplos erros em uma única execução.
+O parser descendente recursivo constrói a AST, aplica precedência e associatividade e recupera erros em pontos de sincronização para permitir a identificação de múltiplos erros em uma única execução. Os vocábulos em português e os aliases em inglês são reconhecidos pelo lexer.
+
+Na API Go, `parser.New(tokens).Parse()` retorna a AST parcial ou completa e uma lista de erros sintáticos. Cada nó conserva o token de origem, incluindo sua linha e coluna.
 
 ---
 
@@ -395,7 +397,7 @@ O back-end também deverá contemplar a otimização exigida pelo projeto.
 
 Atualmente, a raiz contém este README, a licença e a documentação do AFD em [`docs/afd.md`](docs/afd.md). O módulo Go fica em `minilang/`, com `go.mod`, `cmd/minilang/main.go`, `lexer/lexer.go`, `lexer/token.go` e os exemplos `examples/exemple.min` e `examples/exemple-identifer.min`.
 
-A árvore abaixo representa a organização planejada; arquivos de testes, parser, AST, semântica e interpretador ainda não existem. Este README e o diretório `docs/` ficam na raiz do repositório.
+A árvore abaixo resume a organização atual e planejada. Lexer, parser, AST e seus testes já estão implementados; análise semântica e interpretador permanecem planejados. Este README e o diretório `docs/` ficam na raiz do repositório.
 
 ```text
 minilang/
@@ -436,7 +438,8 @@ minilang/
 ```text
 docs/
 ├── afd.md
-└── grammar.ebnf  # planejado para o M2
+├── grammar.ebnf
+└── pda.md
 ```
 
 A estrutura poderá sofrer alterações conforme a evolução do projeto.
@@ -459,7 +462,17 @@ go run ./cmd/minilang examples/exemple.min
 go run ./cmd/minilang examples/exemple-identifer.min
 ```
 
-O primeiro exemplo exercita operadores e delimitadores. O segundo inclui identificadores, números e um erro proposital com `@`. Comentários MiniLang começam com `#`; a sequência `//` representa dois operadores de divisão. No segundo exemplo, `inteiro` é reconhecido como identificador; a palavra reservada implementada é `int`.
+O primeiro exemplo exercita operadores e delimitadores. O segundo inclui identificadores, números e um erro proposital com `@`. Comentários MiniLang começam com `#`; a sequência `//` representa dois operadores de divisão.
+
+Executar a análise sintática dos exemplos M2:
+
+```bash
+go run ./cmd/minilang parse examples/parser/valido.min
+go run ./cmd/minilang parse examples/parser/erro-declaracao.min
+go run ./cmd/minilang parse examples/parser/multiplos-erros.min
+```
+
+O modo `parse` mostra os diagnósticos sintáticos com linha e coluna. Para programas aceitos, confirma a construção da AST. Para programas inválidos, retorna código de saída diferente de zero; o segundo exemplo exibe dois erros na mesma execução. A execução sem `parse` continua apresentando os tokens do lexer.
 
 A saída apresenta o tipo do token, o lexema entre aspas e a posição `linha:coluna`. Por exemplo, `20.5;` gera `FLOAT_LITERAL` e `SEMICOLON`. Ao final do arquivo é emitido `EOF`. Sem um caminho de arquivo, a CLI exibe `Uso: minilang <arquivo>`.
 
@@ -467,7 +480,7 @@ A saída apresenta o tipo do token, o lexema entre aspas e a posição `linha:co
 
 # 🧪 Testes
 
-Os testes automatizados usam o pacote nativo de testes do Go. A suíte do lexer cobre literais inteiros, comentários com `#`, o significado de `//` e o erro para `!` isolado. Execute os comandos abaixo dentro de `minilang/`.
+Os testes automatizados usam o pacote nativo de testes do Go. A bateria de programas do parser fica em `minilang/parser/testdata/`: `valid/` contém fontes aceitas e `invalid/` contém fontes rejeitadas, com diagnósticos esperados nos arquivos `.want`. Os testes leem esses casos automaticamente. Execute os comandos abaixo dentro de `minilang/`.
 
 Executar todos os testes:
 
@@ -481,13 +494,19 @@ Executar especificamente os testes do lexer:
 go test ./lexer
 ```
 
+Executar a bateria do parser com cada caso listado:
+
+```bash
+go test -v ./parser
+```
+
 Executar com informações detalhadas:
 
 ```bash
 go test -v ./...
 ```
 
-A bateria de testes deverá possuir tanto programas válidos quanto inválidos.
+Essa bateria local é reproduzível e cobre casos válidos, mensagens e posições dos erros, além de múltiplos erros em uma execução. Quando a bateria oficial da disciplina estiver disponível, seus arquivos podem ser adicionados a `testdata/` para validar a cobertura completa exigida pela avaliação.
 
 ---
 
@@ -532,39 +551,15 @@ não é possível atribuir REAL a uma variável INTEIRO.
 
 # 📝 Palavras reservadas
 
-O mapa `Keywords` em `minilang/lexer/token.go` reconhece atualmente as seguintes palavras, diferenciando maiúsculas de minúsculas:
+O mapa `Keywords` em `minilang/lexer/token.go` reconhece as palavras abaixo, diferenciando maiúsculas de minúsculas. Cada forma em português e seu alias em inglês geram o mesmo tipo de token:
 
 ```text
-program var int float boolean
-if else while print read
-true false and or not end
+program/programa var int/inteiro float/real boolean/booleano
+if/se else/senão while/enquanto print/escreva read/leia
+true/verdadeiro false/falso and/e or/ou not/não end/fim
 ```
 
-O alinhamento com a especificação em português permanece pendente. As palavras previstas nessa especificação são:
-
-```text
-programa
-var
-inteiro
-booleano
-se
-senão
-enquanto
-escreva
-leia
-verdadeiro
-falso
-e
-ou
-não
-fim
-```
-
-Com a Extensão C adicionaremos:
-
-```text
-real
-```
+Os dois vocabulários são aceitos para manter compatibilidade com os exemplos já existentes e com a especificação da linguagem.
 
 ---
 
@@ -635,15 +630,14 @@ Os comentários são descartados durante a análise léxica. A sequência `//` n
 
 ### M2 — Parser + AST
 
-* [ ] Gramática EBNF
-* [ ] Parser
-* [ ] AST
-* [ ] Precedência
-* [ ] Associatividade
-* [ ] Literais reais na AST
-* [ ] Recuperação de erros
-* [ ] Dangling else
-* [ ] Testes sintáticos
+* [x] Gramática EBNF e documentação da GLC/PDA
+* [x] Parser descendente recursivo
+* [x] AST de comandos e expressões com localização dos tokens
+* [x] Precedência e associatividade
+* [x] Literais reais na AST
+* [x] Recuperação de erros
+* [x] Dangling else
+* [x] Testes sintáticos
 
 ### M3 — Análise Semântica
 

@@ -1,0 +1,6 @@
+programa exemplo {
+    var valor: real;
+    valor = 10 + 2.5;
+    se (não falso) escreva(valor);
+    senão leia(valor);
+} fim

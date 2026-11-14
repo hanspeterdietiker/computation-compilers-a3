@@ -1,0 +1,13 @@
+program controle {
+    var contador: int;
+    var ativo: boolean;
+    contador = 0;
+    ativo = true;
+    read(contador);
+    while (contador < 5 and ativo) {
+        if (contador == 2) print(contador);
+        else {
+            contador = contador + 1;
+        }
+    }
+}
