@@ -1,0 +1,61 @@
+# Gramatica da MiniLang (EBNF)
+
+A gramatica abaixo e livre de contexto (GLC). Os nomes entre `< >` sao
+nao-terminais; palavras entre aspas sao lexemas terminais. `EOF` e o token
+emitido pelo lexer no fim da entrada. A forma em portugues e aceita como alias
+das palavras reservadas em ingles.
+
+```ebnf
+program         = [ program_header ], program_body, [ "end" | "fim" ], EOF ;
+program_header  = ( "program" | "programa" ), [ identifier ] ;
+program_body    = block | { statement } ;
+
+block           = "{", { statement }, "}" ;
+statement       = variable_declaration
+                | assignment
+                | conditional
+                | loop
+                | input
+                | output
+                | block ;
+
+variable_declaration = "var", identifier, ":", type, ";" ;
+type                 = "int" | "inteiro"
+                     | "float" | "real"
+                     | "boolean" | "booleano" ;
+assignment           = identifier, "=", expression, ";" ;
+conditional           = ( "if" | "se" ), "(", expression, ")", statement,
+                        [ ( "else" | "senão" ), statement ] ;
+loop                  = ( "while" | "enquanto" ), "(", expression, ")", statement ;
+input                 = ( "read" | "leia" ), "(", identifier, ")", ";" ;
+output                = ( "print" | "escreva" ), "(", expression, ")", ";" ;
+
+expression      = logical_or ;
+logical_or      = logical_and, { ( "or" | "ou" ), logical_and } ;
+logical_and     = equality, { ( "and" | "e" ), equality } ;
+equality        = comparison, { ( "==" | "!=" ), comparison } ;
+comparison      = term, { ( "<" | "<=" | ">" | ">=" ), term } ;
+term            = factor, { ( "+" | "-" ), factor } ;
+factor          = unary, { ( "*" | "/" | "%" ), unary } ;
+unary           = ( "not" | "não" | "-" | "+" ), unary | primary ;
+primary         = identifier | integer_literal | real_literal
+                | "true" | "verdadeiro" | "false" | "falso"
+                | "(", expression, ")" ;
+
+identifier      = IDENTIFIER ;
+integer_literal = INT_LITERAL ;
+real_literal    = FLOAT_LITERAL ;
+```
+
+Cada repeticao nas regras de expressoes e implementada como um ciclo que
+acumula da esquerda para a direita. Assim, `a - b - c` equivale a
+`(a - b) - c`. A ordem das regras estabelece, da menor para a maior
+precedencia: `ou`, `e`, igualdade, comparacao, soma/subtracao,
+multiplicacao/divisao/modulo e operadores unarios. `senao` e consumido pelo
+`if` mais interno que ainda nao tenha uma alternativa, resolvendo o dangling
+else por associatividade da regra de comando.
+
+As chaves do corpo do programa sao opcionais quando o corpo ocupa o restante
+do arquivo. Blocos de comandos sempre usam chaves. A implementacao permite
+declaracoes em qualquer posicao de um bloco; restricoes de ordem e escopo sao
+responsabilidade da analise semantica (M3).

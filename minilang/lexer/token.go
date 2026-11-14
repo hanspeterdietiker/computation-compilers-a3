@@ -70,32 +70,46 @@ const (
 
 	TokenComment TokenType = "COMMENT" // -> #
 
-
 	// Eof
 	TokenEOF TokenType = "EOF" // End of file
 )
 
 var Keywords = map[string]TokenType{
-	"program": TokenProgram,
-	"var":     TokenVar,
+	"program":  TokenProgram,
+	"programa": TokenProgram,
+	"var":      TokenVar,
 
-	"int":     TokenTypeInt,
-	"float":   TokenTypeFloat,
-	"boolean": TokenTypeBool,
+	"int":      TokenTypeInt,
+	"inteiro":  TokenTypeInt,
+	"float":    TokenTypeFloat,
+	"real":     TokenTypeFloat,
+	"boolean":  TokenTypeBool,
+	"booleano": TokenTypeBool,
 
-	"if":    TokenIf,
-	"else":  TokenElse,
-	"while": TokenWhile,
+	"if":       TokenIf,
+	"se":       TokenIf,
+	"else":     TokenElse,
+	"senão":    TokenElse,
+	"while":    TokenWhile,
+	"enquanto": TokenWhile,
 
-	"print": TokenPrint,
-	"read":  TokenRead,
+	"print":   TokenPrint,
+	"escreva": TokenPrint,
+	"read":    TokenRead,
+	"leia":    TokenRead,
 
-	"true":  TokenTrue,
-	"false": TokenFalse,
+	"true":       TokenTrue,
+	"verdadeiro": TokenTrue,
+	"false":      TokenFalse,
+	"falso":      TokenFalse,
 
 	"and": TokenAnd,
+	"e":   TokenAnd,
 	"or":  TokenOr,
+	"ou":  TokenOr,
 	"not": TokenNot,
+	"não": TokenNot,
 
 	"end": TokenEnd,
+	"fim": TokenEnd,
 }

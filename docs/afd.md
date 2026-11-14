@@ -127,16 +127,16 @@ Depois de reconhecer um identificador, o lexer consulta a seguinte tabela:
 
 | Lexema | Token | Lexema | Token |
 | --- | --- | --- | --- |
-| `program` | `PROGRAM` | `var` | `VAR` |
-| `int` | `TYPE_INT` | `float` | `TYPE_FLOAT` |
-| `boolean` | `TYPE_BOOL` | `if` | `IF` |
-| `else` | `ELSE` | `while` | `WHILE` |
-| `print` | `PRINT` | `read` | `READ` |
-| `true` | `TRUE` | `false` | `FALSE` |
-| `and` | `AND` | `or` | `OR` |
-| `not` | `NOT` | `end` | `END` |
+| `program`, `programa` | `PROGRAM` | `var` | `VAR` |
+| `int`, `inteiro` | `TYPE_INT` | `float`, `real` | `TYPE_FLOAT` |
+| `boolean`, `booleano` | `TYPE_BOOL` | `if`, `se` | `IF` |
+| `else`, `senão` | `ELSE` | `while`, `enquanto` | `WHILE` |
+| `print`, `escreva` | `PRINT` | `read`, `leia` | `READ` |
+| `true`, `verdadeiro` | `TRUE` | `false`, `falso` | `FALSE` |
+| `and`, `e` | `AND` | `or`, `ou` | `OR` |
+| `not`, `não` | `NOT` | `end`, `fim` | `END` |
 
-Essa consulta diferencia letras maiúsculas de minúsculas. As palavras em português apresentadas na especificação do projeto ainda não são reconhecidas como palavras reservadas.
+Essa consulta diferencia letras maiúsculas de minúsculas. As formas em português e seus aliases em inglês geram os mesmos tipos de token.
 
 ## Estados de aceitação
 

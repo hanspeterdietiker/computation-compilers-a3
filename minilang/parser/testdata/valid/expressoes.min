@@ -1,0 +1,3 @@
+var resultado: real;
+resultado = -(10 + 2) * 2.5 / 5;
+print(not false and (resultado >= 1.0 or true));
