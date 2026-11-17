@@ -20,7 +20,17 @@ type Statement interface {
 type Expression interface {
 	Node
 	expressionNode()
+	GetType() Type
 }
+
+type Type string
+
+const (
+	TypeUnknown Type = "unknown"
+	TypeInteger Type = "inteiro"
+	TypeReal    Type = "real"
+	TypeBoolean Type = "booleano"
+)
 
 type Program struct {
 	NodeBase
@@ -75,30 +85,35 @@ type ExpressionStmt struct {
 
 type BinaryExpr struct {
 	NodeBase
-	Left     Expression
-	Operator lexer.Token
-	Right    Expression
+	Left         Expression
+	Operator     lexer.Token
+	Right        Expression
+	InferredType Type
 }
 
 type UnaryExpr struct {
 	NodeBase
-	Operator lexer.Token
-	Right    Expression
+	Operator     lexer.Token
+	Right        Expression
+	InferredType Type
 }
 
 type GroupingExpr struct {
 	NodeBase
-	Expression Expression
+	Expression   Expression
+	InferredType Type
 }
 
 type LiteralExpr struct {
 	NodeBase
-	Value interface{}
+	Value        interface{}
+	InferredType Type
 }
 
 type IdentifierExpr struct {
 	NodeBase
-	Name lexer.Token
+	Name         lexer.Token
+	InferredType Type
 }
 
 func (*VarDecl) statementNode()         {}
@@ -114,3 +129,11 @@ func (*UnaryExpr) expressionNode()      {}
 func (*GroupingExpr) expressionNode()   {}
 func (*LiteralExpr) expressionNode()    {}
 func (*IdentifierExpr) expressionNode() {}
+
+func (e *BinaryExpr) GetType() Type   { return e.InferredType }
+func (e *UnaryExpr) GetType() Type    { return e.InferredType }
+func (e *GroupingExpr) GetType() Type { return e.InferredType }
+func (e *LiteralExpr) GetType() Type  { return e.InferredType }
+func (e *IdentifierExpr) GetType() Type {
+	return e.InferredType
+}

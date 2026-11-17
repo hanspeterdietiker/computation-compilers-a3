@@ -11,6 +11,17 @@ type Lexer struct {
 	line    int
 	column  int
 	tokens  []Token
+	errors  []error
+}
+
+type Error struct {
+	Line      int
+	Column    int
+	Character rune
+}
+
+func (e Error) Error() string {
+	return fmt.Sprintf("[ERRO LÉXICO] linha %d, coluna %d: caractere '%c' não reconhecido", e.Line, e.Column, e.Character)
 }
 
 func New(source string) *Lexer {
@@ -155,6 +166,8 @@ func (l *Lexer) comment() {
 }
 
 func (l *Lexer) reportInvalidCharacter(c rune) {
+	lexicalError := Error{Line: l.line, Column: l.column - 1, Character: c}
+	l.errors = append(l.errors, lexicalError)
 	fmt.Printf(
 		"[ERRO LÉXICO] linha %d, coluna %d: caractere '%c' não reconhecido\n",
 		l.line,
@@ -227,6 +240,10 @@ func (l *Lexer) addToken(tokenType TokenType) {
 		Line:   l.line,
 		Column: l.column - len([]rune(text)),
 	})
+}
+
+func (l *Lexer) Errors() []error {
+	return append([]error(nil), l.errors...)
 }
 
 func (l *Lexer) ScanTokens() []Token {

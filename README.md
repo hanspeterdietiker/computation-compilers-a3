@@ -200,6 +200,11 @@ A análise semântica deverá detectar situações como:
 
 A AST também será anotada com os tipos inferidos durante a análise.
 
+No marco M3, os blocos criam escopos aninhados, declarações são visíveis a
+partir do ponto em que aparecem e a extensão `real` permite promoção de
+`inteiro` para `real`. A implementação e suas regras estão documentadas em
+[`docs/semantic.md`](docs/semantic.md).
+
 ---
 
 # 🔢 Extensão C — Tipo `real`
@@ -397,7 +402,10 @@ O back-end também deverá contemplar a otimização exigida pelo projeto.
 
 Atualmente, a raiz contém este README, a licença e a documentação do AFD em [`docs/afd.md`](docs/afd.md). O módulo Go fica em `minilang/`, com `go.mod`, `cmd/minilang/main.go`, `lexer/lexer.go`, `lexer/token.go` e os exemplos `examples/exemple.min` e `examples/exemple-identifer.min`.
 
-A árvore abaixo resume a organização atual e planejada. Lexer, parser, AST e seus testes já estão implementados; análise semântica e interpretador permanecem planejados. Este README e o diretório `docs/` ficam na raiz do repositório.
+A árvore abaixo resume a organização atual e planejada. Lexer, parser, AST e
+análise semântica, com seus testes, já estão implementados; o interpretador
+permanece planejado para o M4. Este README e o diretório `docs/` ficam na raiz
+do repositório.
 
 ```text
 minilang/
@@ -439,7 +447,8 @@ minilang/
 docs/
 ├── afd.md
 ├── grammar.ebnf
-└── pda.md
+├── pda.md
+└── semantic.md
 ```
 
 A estrutura poderá sofrer alterações conforme a evolução do projeto.
@@ -471,6 +480,15 @@ go run ./cmd/minilang parse examples/parser/valido.min
 go run ./cmd/minilang parse examples/parser/erro-declaracao.min
 go run ./cmd/minilang parse examples/parser/multiplos-erros.min
 ```
+
+Executar a análise semântica (lexer + parser + semântico):
+
+```bash
+go run ./cmd/minilang check examples/parser/valido.min
+```
+
+O modo `check` informa erros semânticos com linha e coluna ou, em caso de
+sucesso, imprime a tabela de símbolos com tipo, escopo e posição de declaração.
 
 O modo `parse` mostra os diagnósticos sintáticos com linha e coluna. Para programas aceitos, confirma a construção da AST. Para programas inválidos, retorna código de saída diferente de zero; o segundo exemplo exibe dois erros na mesma execução. A execução sem `parse` continua apresentando os tokens do lexer.
 
@@ -641,15 +659,15 @@ Os comentários são descartados durante a análise léxica. A sequência `//` n
 
 ### M3 — Análise Semântica
 
-* [ ] Tabela de símbolos
-* [ ] Escopos
-* [ ] Verificação de declarações
-* [ ] Sistema de tipos
-* [ ] Tipo `real`
-* [ ] Promoção `inteiro → real`
-* [ ] Verificação de operadores
-* [ ] AST anotada
-* [ ] Testes semânticos
+* [x] Tabela de símbolos
+* [x] Escopos
+* [x] Verificação de declarações
+* [x] Sistema de tipos
+* [x] Tipo `real`
+* [x] Promoção `inteiro → real`
+* [x] Verificação de operadores
+* [x] AST anotada
+* [x] Testes semânticos
 
 ### M4 — Back-end
 
