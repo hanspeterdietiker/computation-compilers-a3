@@ -38,8 +38,9 @@ func TestSlashRemainsDivisionOperator(t *testing.T) {
 }
 
 func TestLoneExclamationReportsLexicalError(t *testing.T) {
+	scanner := New("!")
 	output := captureStdout(t, func() {
-		tokens := New("!").ScanTokens()
+		tokens := scanner.ScanTokens()
 		assertTokens(t, tokens, []expectedToken{
 			{TokenEOF, "", 1, 2},
 		})
@@ -48,6 +49,10 @@ func TestLoneExclamationReportsLexicalError(t *testing.T) {
 	want := "[ERRO LÉXICO] linha 1, coluna 1: caractere '!' não reconhecido"
 	if !strings.Contains(output, want) {
 		t.Fatalf("saída de erro = %q; esperado que contenha %q", output, want)
+	}
+	errors := scanner.Errors()
+	if len(errors) != 1 || errors[0].Error() != want {
+		t.Fatalf("erros léxicos = %v; esperado %q", errors, want)
 	}
 }
 
