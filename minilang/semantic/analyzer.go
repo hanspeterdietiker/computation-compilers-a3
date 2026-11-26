@@ -45,7 +45,7 @@ func (a *Analyzer) Analyze(program *ast.Program) []error {
 func (a *Analyzer) analyzeStatement(statement ast.Statement) {
 	switch node := statement.(type) {
 	case *ast.VarDecl:
-		if _, declared := a.symbols.Declare(node.Name.Lexeme, typeFromToken(node.Type), node.Name); !declared {
+		if _, declared := a.symbols.Declare(node.Name.Lexeme, ast.TypeFromToken(node.Type), node.Name); !declared {
 			a.report(node.Name, fmt.Sprintf("variável '%s' já declarada no escopo '%s'.", node.Name.Lexeme, a.symbols.CurrentScope().Name))
 		}
 	case *ast.AssignStmt:
@@ -184,19 +184,6 @@ func (a *Analyzer) binaryType(operator lexer.Token, left, right ast.Type) ast.Ty
 
 func (a *Analyzer) report(token lexer.Token, message string) {
 	a.errors = append(a.errors, Error{Token: token, Message: message})
-}
-
-func typeFromToken(token lexer.Token) ast.Type {
-	switch token.Type {
-	case lexer.TokenTypeInt:
-		return ast.TypeInteger
-	case lexer.TokenTypeFloat:
-		return ast.TypeReal
-	case lexer.TokenTypeBool:
-		return ast.TypeBoolean
-	default:
-		return ast.TypeUnknown
-	}
 }
 
 func assignable(target, value ast.Type) bool {
