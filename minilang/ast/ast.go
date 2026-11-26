@@ -137,3 +137,17 @@ func (e *LiteralExpr) GetType() Type  { return e.InferredType }
 func (e *IdentifierExpr) GetType() Type {
 	return e.InferredType
 }
+
+// TypeFromToken converte o token de tipo de uma declaração no tipo da AST.
+func TypeFromToken(token lexer.Token) Type {
+	switch token.Type {
+	case lexer.TokenTypeInt:
+		return TypeInteger
+	case lexer.TokenTypeFloat:
+		return TypeReal
+	case lexer.TokenTypeBool:
+		return TypeBoolean
+	default:
+		return TypeUnknown
+	}
+}
