@@ -1,9 +1,10 @@
-# Gramatica da MiniLang (EBNF)
+# Gramática da MiniLang (EBNF)
 
-A gramatica abaixo e livre de contexto (GLC). Os nomes entre `< >` sao
-nao-terminais; palavras entre aspas sao lexemas terminais. `EOF` e o token
-emitido pelo lexer no fim da entrada. A forma em portugues e aceita como alias
-das palavras reservadas em ingles.
+A gramática abaixo é livre de contexto (GLC). Os nomes em minúsculas são
+não-terminais; palavras entre aspas são lexemas terminais; nomes em maiúsculas
+(`IDENTIFIER`, `INT_LITERAL`, `FLOAT_LITERAL`, `EOF`) são tokens do lexer. `EOF` é o token
+emitido pelo lexer no fim da entrada. As palavras reservadas em português e
+em inglês são equivalentes (geram o mesmo token).
 
 ```ebnf
 program         = [ program_header ], program_body, [ "end" | "fim" ], EOF ;
@@ -47,15 +48,15 @@ integer_literal = INT_LITERAL ;
 real_literal    = FLOAT_LITERAL ;
 ```
 
-Cada repeticao nas regras de expressoes e implementada como um ciclo que
+Cada repetição nas regras de expressões é implementada como um ciclo que
 acumula da esquerda para a direita. Assim, `a - b - c` equivale a
 `(a - b) - c`. A ordem das regras estabelece, da menor para a maior
-precedencia: `ou`, `e`, igualdade, comparacao, soma/subtracao,
-multiplicacao/divisao/modulo e operadores unarios. `senao` e consumido pelo
-`if` mais interno que ainda nao tenha uma alternativa, resolvendo o dangling
+precedência: `ou`, `e`, igualdade, comparação, soma/subtração,
+multiplicação/divisão/módulo e operadores unários. `senão` é consumido pelo
+`se` mais interno que ainda não tenha uma alternativa, resolvendo o dangling
 else por associatividade da regra de comando.
 
-As chaves do corpo do programa sao opcionais quando o corpo ocupa o restante
-do arquivo. Blocos de comandos sempre usam chaves. A implementacao permite
-declaracoes em qualquer posicao de um bloco; restricoes de ordem e escopo sao
-responsabilidade da analise semantica (M3).
+As chaves do corpo do programa são opcionais quando o corpo ocupa o restante
+do arquivo. Blocos de comandos sempre usam chaves. A implementação permite
+declarações em qualquer posição de um bloco; restrições de ordem e escopo são
+responsabilidade da análise semântica ([`semantico.md`](semantico.md)).

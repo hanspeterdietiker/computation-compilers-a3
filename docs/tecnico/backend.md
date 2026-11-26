@@ -1,7 +1,17 @@
 # Back-end (M4)
 
+| | |
+| --- | --- |
+| **Entrada** | `*ast.Program` anotado pelo [analisador semântico](semantico.md) |
+| **Saída** | Saída padrão do programa, ou um erro de execução |
+| **Estratégia** | Otimização sobre a AST seguida de interpretação direta da AST |
+| **Código** | `minilang/value/`, `minilang/optimizer/`, `minilang/interpreter/` |
+| **API** | `report := optimizer.Optimize(program)`; `err := interpreter.New(stdin, stdout).Run(program)` |
+
 O back-end recebe a AST validada e anotada pelo analisador semântico, aplica a
-otimização e executa o programa por **interpretação direta da AST**.
+otimização e executa o programa por **interpretação direta da AST**. Não há
+geração de código de máquina nem de bytecode: o interpretador percorre os nós
+da árvore e executa cada um.
 
 ```text
 AST anotada → Otimizador → AST otimizada → Interpretador → saída
@@ -88,3 +98,6 @@ go test ./value ./optimizer ./interpreter ./cmd/minilang
 Os testes de integração ficam em `cmd/minilang/testdata/run/`: cada `.min` tem
 a saída esperada em `.want`, entrada opcional em `.in` e, quando deve falhar, o
 diagnóstico esperado em `.err`.
+
+Como criar novos casos de integração está descrito em
+[`arquitetura.md`](arquitetura.md#testes).

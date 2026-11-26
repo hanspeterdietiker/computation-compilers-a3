@@ -1,6 +1,15 @@
-# AFD do analisador léxico
+# Análise léxica (M1)
 
-Este documento descreve o Autômato Finito Determinístico (AFD) usado como referência para o lexer da MiniLang. Ele corresponde ao comportamento implementado em `minilang/lexer/lexer.go` e registra separadamente as limitações atuais.
+| | |
+| --- | --- |
+| **Entrada** | Texto do arquivo `.min` |
+| **Saída** | `[]lexer.Token` (tipo, lexema, linha, coluna), sempre terminando em `EOF` |
+| **Modelo formal** | Autômato Finito Determinístico (AFD) |
+| **Código** | `minilang/lexer/lexer.go`, `minilang/lexer/token.go` |
+| **API** | `l := lexer.New(src); tokens := l.ScanTokens(); errs := l.Errors()` |
+
+Este documento descreve o AFD que reconhece os tokens da MiniLang e como cada
+parte dele aparece no código.
 
 ## Funcionamento geral
 
@@ -154,3 +163,45 @@ Essa consulta diferencia letras maiúsculas de minúsculas. As formas em portugu
 | `qDIFERENTE` | Diferente |
 | Estados unitários | Operadores aritméticos e delimitadores |
 
+
+## Do AFD para o código
+
+O lexer não guarda uma tabela de estados explícita. Cada estado do AFD virou um
+trecho de código:
+
+| Estado(s) | Implementação |
+| --- | --- |
+| `q0` | `scanToken()`: lê um caractere e escolhe o caminho por um `switch` |
+| `qID` | `identifier()`: consome enquanto `isAlphaNumeric()` e consulta `Keywords` |
+| `qINT`, `qPONTO_REAL`, `qREAL` | `number()`: consome dígitos; só entra na parte real se `peekNextIsDigit()` confirmar um dígito após o `.` |
+| `qIGUAL`, `qMENOR`, `qMAIOR`, `qEXCLAMACAO` | `match('=')`: olha um caractere à frente para decidir entre o token simples e o composto |
+| `qCOMENTARIO` | `comment()`: descarta até a quebra de linha |
+| Erro | `reportInvalidCharacter()`: registra o erro e volta a `q0` |
+
+A regra do maior prefixo válido aparece no uso de `match` e
+`peekNextIsDigit`: o lexer só consome o próximo caractere se ele estender o
+lexema atual.
+
+## Erros léxicos
+
+Qualquer caractere fora do alfabeto, incluindo `@` e `!` isolado, gera:
+
+```text
+[ERRO LÉXICO] linha 7, coluna 9: caractere '@' não reconhecido
+```
+
+O caractere é descartado e a análise continua até `EOF`, então todos os erros
+léxicos do arquivo são relatados de uma vez.
+
+## Testes
+
+```bash
+cd minilang
+go test -v ./lexer
+```
+
+`lexer/lexer_test.go` tem quatro testes unitários: literal inteiro gera
+`INT_LITERAL`, comentário com `#` é descartado, `//` gera dois `DIVIDE` e `!`
+isolado gera erro léxico. O restante do AFD (palavras reservadas, literais
+reais, operadores compostos, posições) é exercitado indiretamente pelas
+baterias do parser e de integração, que dependem dos tokens corretos.
