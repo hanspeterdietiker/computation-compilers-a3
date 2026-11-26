@@ -394,7 +394,10 @@ Interpretador
 12.5
 ```
 
-O back-end também deverá contemplar a otimização exigida pelo projeto.
+O back-end contempla a otimização exigida pelo projeto: **dobra de constantes**
+(`2 * (3 + 4) - 1` → `13`) e **eliminação de código morto** (`se` com condição
+constante e `enquanto (falso)`). Interpretador, regras de execução, erros de
+execução e otimização estão documentados em [`docs/backend.md`](docs/backend.md).
 
 ---
 
@@ -402,17 +405,18 @@ O back-end também deverá contemplar a otimização exigida pelo projeto.
 
 Atualmente, a raiz contém este README, a licença e a documentação do AFD em [`docs/afd.md`](docs/afd.md). O módulo Go fica em `minilang/`, com `go.mod`, `cmd/minilang/main.go`, `lexer/lexer.go`, `lexer/token.go` e os exemplos `examples/exemple.min` e `examples/exemple-identifer.min`.
 
-A árvore abaixo resume a organização atual e planejada. Lexer, parser, AST e
-análise semântica, com seus testes, já estão implementados; o interpretador
-permanece planejado para o M4. Este README e o diretório `docs/` ficam na raiz
-do repositório.
+A árvore abaixo resume a organização do módulo. Lexer, parser, AST, análise
+semântica, otimizador e interpretador estão implementados, com seus testes.
+Este README e o diretório `docs/` ficam na raiz do repositório.
 
 ```text
 minilang/
 │
 ├── cmd/
 │   └── minilang/
-│       └── main.go
+│       ├── main.go
+│       ├── main_test.go
+│       └── testdata/run/
 │
 ├── lexer/
 │   ├── lexer.go
@@ -431,13 +435,22 @@ minilang/
 │   ├── symbol_table.go
 │   └── analyzer_test.go
 │
+├── value/
+│   ├── value.go
+│   └── value_test.go
+│
+├── optimizer/
+│   ├── optimizer.go
+│   └── optimizer_test.go
+│
 ├── interpreter/
 │   ├── interpreter.go
+│   ├── environment.go
 │   └── interpreter_test.go
 │
 ├── examples/
-│   ├── valido.min
-│   ├── invalido.min
+│   ├── parser/
+│   ├── programa.min
 │   └── real.min
 │
 └── go.mod
@@ -448,7 +461,8 @@ docs/
 ├── afd.md
 ├── grammar.ebnf
 ├── pda.md
-└── semantic.md
+├── semantic.md
+└── backend.md
 ```
 
 A estrutura poderá sofrer alterações conforme a evolução do projeto.
@@ -489,6 +503,21 @@ go run ./cmd/minilang check examples/parser/valido.min
 
 O modo `check` informa erros semânticos com linha e coluna ou, em caso de
 sucesso, imprime a tabela de símbolos com tipo, escopo e posição de declaração.
+
+Executar um programa (pipeline completo, com otimização e interpretador):
+
+```bash
+echo 6 | go run ./cmd/minilang run examples/programa.min
+go run ./cmd/minilang run examples/real.min
+```
+
+`leia` consome valores da entrada padrão. Erros de qualquer fase interrompem a
+execução com código de saída diferente de zero. Para ver o efeito da
+otimização:
+
+```bash
+go run ./cmd/minilang opt examples/programa.min
+```
 
 O modo `parse` mostra os diagnósticos sintáticos com linha e coluna. Para programas aceitos, confirma a construção da AST. Para programas inválidos, retorna código de saída diferente de zero; o segundo exemplo exibe dois erros na mesma execução. A execução sem `parse` continua apresentando os tokens do lexer.
 
@@ -563,6 +592,13 @@ Exemplo relacionado à extensão C:
 ```text
 [ERRO SEMÂNTICO] linha 12, coluna 14:
 não é possível atribuir REAL a uma variável INTEIRO.
+```
+
+Exemplo de execução:
+
+```text
+[ERRO DE EXECUÇÃO] linha 5, coluna 11:
+divisão por zero.
 ```
 
 ---
@@ -671,15 +707,15 @@ Os comentários são descartados durante a análise léxica. A sequência `//` n
 
 ### M4 — Back-end
 
-* [ ] Interpretador da AST
-* [ ] Execução de valores inteiros
-* [ ] Execução de valores reais
-* [ ] Coerção `inteiro → real`
-* [ ] Entrada e saída
-* [ ] Condicionais
-* [ ] Laços
-* [ ] Otimização
-* [ ] Testes de integração
+* [x] Interpretador da AST
+* [x] Execução de valores inteiros
+* [x] Execução de valores reais
+* [x] Coerção `inteiro → real`
+* [x] Entrada e saída
+* [x] Condicionais
+* [x] Laços
+* [x] Otimização
+* [x] Testes de integração
 * [ ] Relatório técnico
 * [ ] Preparação da demonstração
 
@@ -687,13 +723,13 @@ Os comentários são descartados durante a análise léxica. A sequência `//` n
 
 # 🎯 Objetivo final
 
-Ao final do projeto, esperamos executar, dentro de `minilang/`, um programa completo como o futuro `examples/programa.min`:
+Dentro de `minilang/`, um programa completo como `examples/programa.min` é executado com:
 
 ```bash
-go run ./cmd/minilang examples/programa.min
+go run ./cmd/minilang run examples/programa.min
 ```
 
-e realizar automaticamente:
+que realiza automaticamente:
 
 ```text
 programa.min
