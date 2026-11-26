@@ -1,0 +1,6 @@
+var a: inteiro;
+var b: inteiro;
+a = 10;
+escreva(a);
+escreva(a / b);
+escreva(1);

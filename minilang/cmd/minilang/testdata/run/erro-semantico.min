@@ -1,0 +1,3 @@
+var q: inteiro;
+q = 5.75;
+escreva(q);
