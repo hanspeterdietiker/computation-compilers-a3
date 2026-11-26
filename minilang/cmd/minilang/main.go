@@ -1,37 +1,40 @@
 package main
 
-// existe o package exemples
-// para testar rode 'go run ./cmd/minilang examples/exemple-identifer.min'
-// para rodar deve ter o go instalado e configurado no path do sistema operacional
-// além do mais há testes automatizados que podem ser executados com o comando 'go test'
+// para testar rode 'go run ./cmd/minilang run examples/programa.min'
+// os testes automatizados são executados com 'go test ./...'
 
 import (
 	"fmt"
 	"io"
 	"os"
 
+	"minilang/ast"
+	"minilang/interpreter"
 	"minilang/lexer"
+	"minilang/optimizer"
 	"minilang/parser"
 	"minilang/semantic"
 )
 
+const usage = "Uso: minilang <arquivo> | minilang parse <arquivo> | minilang check <arquivo> | minilang opt <arquivo> | minilang run <arquivo>"
+
 func main() {
-	os.Exit(run(os.Args[1:], os.Stdout, os.Stderr))
+	os.Exit(run(os.Args[1:], os.Stdin, os.Stdout, os.Stderr))
 }
 
-func run(args []string, output, errorOutput io.Writer) int {
-	parseMode := len(args) > 0 && args[0] == "parse"
-	checkMode := len(args) > 0 && args[0] == "check"
-	if parseMode || checkMode {
-		args = args[1:]
+func run(args []string, input io.Reader, output, errorOutput io.Writer) int {
+	mode := "tokens"
+	if len(args) > 0 {
+		switch args[0] {
+		case "parse", "check", "opt", "run":
+			mode, args = args[0], args[1:]
+		}
 	}
 	if len(args) != 1 {
-		if parseMode {
-			fmt.Fprintln(errorOutput, "Uso: minilang parse <arquivo>")
-		} else if checkMode {
-			fmt.Fprintln(errorOutput, "Uso: minilang check <arquivo>")
+		if mode == "tokens" {
+			fmt.Fprintln(errorOutput, usage)
 		} else {
-			fmt.Fprintln(errorOutput, "Uso: minilang <arquivo> | minilang parse <arquivo> | minilang check <arquivo>")
+			fmt.Fprintf(errorOutput, "Uso: minilang %s <arquivo>\n", mode)
 		}
 		return 2
 	}
@@ -44,51 +47,73 @@ func run(args []string, output, errorOutput io.Writer) int {
 
 	scanner := lexer.New(string(data))
 	tokens := scanner.ScanTokens()
-	if (parseMode || checkMode) && len(scanner.Errors()) > 0 {
+	if mode == "tokens" {
+		printTokens(output, tokens)
+		return 0
+	}
+	if len(scanner.Errors()) > 0 {
 		fmt.Fprintf(errorOutput, "Análise léxica encerrada: %d erro(s) encontrado(s).\n", len(scanner.Errors()))
 		return 1
 	}
-	if parseMode || checkMode {
-		program, errors := parser.New(tokens).Parse()
-		for _, parseError := range errors {
-			fmt.Fprintln(errorOutput, parseError)
-		}
-		if len(errors) > 0 {
-			fmt.Fprintf(errorOutput, "Análise sintática encerrada: %d erro(s) encontrado(s).\n", len(errors))
-			return 1
-		}
-		if checkMode {
-			analyzer := semantic.New()
-			semanticErrors := analyzer.Analyze(program)
-			for _, semanticError := range semanticErrors {
-				fmt.Fprintln(errorOutput, semanticError)
-			}
-			if len(semanticErrors) > 0 {
-				fmt.Fprintf(errorOutput, "Análise semântica encerrada: %d erro(s) encontrado(s).\n", len(semanticErrors))
-				return 1
-			}
-			fmt.Fprintf(output, "Análise semântica concluída sem erros. AST anotada com %d símbolo(s).\n", len(analyzer.SymbolTable().Symbols()))
-			fmt.Fprintln(output, "Identificador | Tipo | Escopo | Declaração")
-			for _, symbol := range analyzer.SymbolTable().Symbols() {
-				fmt.Fprintf(output, "%s | %s | %s | %d:%d\n",
-					symbol.Name, symbol.Type, symbol.Scope,
-					symbol.DeclarationToken.Line, symbol.DeclarationToken.Column)
-			}
-			return 0
-		}
+
+	program, errors := parser.New(tokens).Parse()
+	if reportErrors(errorOutput, errors, "sintática") {
+		return 1
+	}
+	if mode == "parse" {
 		fmt.Fprintf(output, "Análise sintática concluída sem erros. AST criada com %d comando(s).\n", len(program.Statements))
 		return 0
 	}
 
-	for _, token := range tokens {
-		fmt.Fprintf(
-			output,
-			"%-20s %-15q %d:%d\n",
-			token.Type,
-			token.Lexeme,
-			token.Line,
-			token.Column,
-		)
+	analyzer := semantic.New()
+	if reportErrors(errorOutput, analyzer.Analyze(program), "semântica") {
+		return 1
+	}
+	switch mode {
+	case "check":
+		printSymbols(output, analyzer.SymbolTable())
+		return 0
+	case "opt":
+		report := optimizer.Optimize(program)
+		fmt.Fprintf(output, "Otimização concluída: %d expressão(ões) constante(s) dobrada(s), %d comando(s) eliminado(s).\n",
+			report.FoldedExpressions, report.RemovedStatements)
+		return 0
+	}
+	return execute(program, input, output, errorOutput)
+}
+
+func execute(program *ast.Program, input io.Reader, output, errorOutput io.Writer) int {
+	optimizer.Optimize(program)
+	if err := interpreter.New(input, output).Run(program); err != nil {
+		fmt.Fprintln(errorOutput, err)
+		return 1
 	}
 	return 0
+}
+
+func reportErrors(errorOutput io.Writer, errors []error, phase string) bool {
+	for _, err := range errors {
+		fmt.Fprintln(errorOutput, err)
+	}
+	if len(errors) > 0 {
+		fmt.Fprintf(errorOutput, "Análise %s encerrada: %d erro(s) encontrado(s).\n", phase, len(errors))
+	}
+	return len(errors) > 0
+}
+
+func printSymbols(output io.Writer, table *semantic.SymbolTable) {
+	symbols := table.Symbols()
+	fmt.Fprintf(output, "Análise semântica concluída sem erros. AST anotada com %d símbolo(s).\n", len(symbols))
+	fmt.Fprintln(output, "Identificador | Tipo | Escopo | Declaração")
+	for _, symbol := range symbols {
+		fmt.Fprintf(output, "%s | %s | %s | %d:%d\n",
+			symbol.Name, symbol.Type, symbol.Scope,
+			symbol.DeclarationToken.Line, symbol.DeclarationToken.Column)
+	}
+}
+
+func printTokens(output io.Writer, tokens []lexer.Token) {
+	for _, token := range tokens {
+		fmt.Fprintf(output, "%-20s %-15q %d:%d\n", token.Type, token.Lexeme, token.Line, token.Column)
+	}
 }

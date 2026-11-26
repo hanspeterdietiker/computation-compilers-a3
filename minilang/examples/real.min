@@ -1,0 +1,12 @@
+var preco: real;
+var quantidade: inteiro;
+var total: real;
+
+preco = 19.90;
+quantidade = 3;
+total = preco * quantidade;
+escreva(total);
+
+total = 10;
+escreva(total);
+escreva(10 + 2.5);

@@ -1,0 +1,11 @@
+programa fatorial {
+    var n: inteiro;
+    var resultado: inteiro;
+    leia(n);
+    resultado = 1;
+    enquanto (n > 1) {
+        resultado = resultado * n;
+        n = n - 1;
+    }
+    escreva(resultado);
+} fim

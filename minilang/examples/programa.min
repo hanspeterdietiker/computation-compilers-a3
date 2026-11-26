@@ -1,0 +1,30 @@
+programa demonstracao {
+    # lê um limite e mostra os pares até ele, a soma e a média
+    var limite: inteiro;
+    var i: inteiro;
+    var soma: inteiro;
+    var media: real;
+    var quantidade: inteiro;
+
+    leia(limite);
+    i = 1;
+    enquanto (i <= limite) {
+        se (i % 2 == 0) {
+            escreva(i);
+            quantidade = quantidade + 1;
+        }
+        soma = soma + i;
+        i = i + 1;
+    }
+
+    escreva(soma);
+    se (quantidade > 0) {
+        media = soma;
+        media = media / quantidade;
+        escreva(media);
+    } senão escreva(0);
+
+    # expressões constantes dobradas pelo otimizador
+    escreva(2 * (3 + 4) - 1);
+    escreva(10 + 2.5);
+} fim

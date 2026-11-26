@@ -1,0 +1,5 @@
+var x: inteiro;
+x = 2 * (3 + 4) - 1;
+se (1 > 2) escreva(0); senão escreva(x);
+enquanto (falso) escreva(99);
+se (verdadeiro ou x > 0) escreva(não falso);

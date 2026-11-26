@@ -1,0 +1,17 @@
+# média de notas lidas da entrada; para quando a nota é negativa
+var nota: real;
+var soma: real;
+var quantidade: inteiro;
+var continuar: booleano;
+continuar = verdadeiro;
+enquanto (continuar) {
+    leia(nota);
+    se (nota < 0) continuar = falso;
+    senão {
+        soma = soma + nota;
+        quantidade = quantidade + 1;
+    }
+}
+se (quantidade > 0) escreva(soma / quantidade);
+senão escreva(0);
+escreva(soma >= 15 e quantidade == 2);
